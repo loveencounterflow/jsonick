@@ -1,0 +1,18 @@
+{
+  "name": "normalize-cli-arguments",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@11.20.0",
+  "dependencies": {
+    "bricabrac-sfmodules": "^0.22.3",
+    "guy": "^14.2.0",
+    "interlex": "~0.14.0"
+  }
+}
