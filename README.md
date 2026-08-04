@@ -9,6 +9,8 @@ cool with that.*
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [JSONick](#jsonick)
+  - [Motivation](#motivation)
+  - [JSONick](#jsonick-1)
 - [PRELIMINARY DRAFT, NO DETAIL OF THIS WILL REMAIN UNCHANGED](#preliminary-draft-no-detail-of-this-will-remain-unchanged)
   - [Tools](#tools)
     - [CLI Arguments as JSON List Literal](#cli-arguments-as-json-list-literal)
@@ -17,6 +19,67 @@ cool with that.*
 
 
 # JSONick
+
+## Motivation
+
+* JSONick is a standard and a software to facilitate inter-process communication and command line option
+  handling by relying on JSON for inputs and outputs.
+
+* Classical command line tools typically accept named parameters (arguments, options, flags) and mark their
+  names by prefixing them with a single or double hyphen. Most CLI tools use a single hyphen for short
+  option names and double hyphens for long option names. Some CLI tools use only single hyphens and do not
+  provide short options. Rarely, CLI tools use a somewhat twisted Boolean logic for options: for example,
+  the Bash `set` command accepts the call `set -u` to enable errors when an unset variable is encountered.
+  Now, to *disable* errors from unset variables you'd call `set +u` which is 180 degrees of strange.
+
+* Classical command line tools typically output "mildly structured" text. It may come in any kind of
+  formatting, change between releases, change with locale settings. When things like filenames with spaces
+  and Unicode characteres outside of US-ASCII (Unicode U+0001..U+007f) are output, all bets are off what
+  will happen: octal codes, percent encoding, single quotes, double quotes, no special handling at
+  all—anything is possible.
+
+* Both of the observations above make the command line harder to use than necessary. Often one has to write
+  custom parsers to digest the output of tools. Assembling properly formatted command lines can also be
+  difficult.
+
+* We can not and will not change this (for now).
+
+* Instead, let's build an alternative that is more strict in its rules and requires less work to get tools
+  to talk to each other over command line pipelines.
+
+## JSONick
+
+* JSONick-compliant command line tools whose inputs are text oriented:
+
+  * must accept JSON-formatted data over STDIN as input (the minimum and default behavior)
+    * typically, the input will be a standard JSON-formatted object literal
+    * in the future we will extend JSON to include convenient shortcuts, see below
+  * must accept pipelined data, meaning `cmd {}` is equivalent to `printf '{}' | cmd`
+  * may additionally accept data in other formats, typically announced by a command line switch or a file name
+
+* JSONick-compliant command line tools whose outputs are text oriented:
+
+  * must output JSON-formatted data to STDOUT. It remains unspecified (for the time being at least) whether
+    the output should use compressed (optimized for size) or formatted JSON (optimized for readability);
+  * in any event, formatting of outputs (or any JSON, for that matter) should be left to specialized
+    formatting tools and not be implemented over and over for each individual command.
+
+* The task of the JSONick toolkit is to present a unified view onto input data and options. These data are
+  modelled as an an object with two members, `c` for 'control' (whose attributes are set by command line
+  arguments) and `d` for 'data', that is, the 'business data' that the command works on.
+
+* `c` and `d` are called 'realms' of data in the below.
+
+* If JSONick-compliant command line tools provide command line arguments (CLAs), they must follow these
+  guidelines:
+  * a CLA that starts with a single hypen-minus (`-`, U+002d) is considered a Boolean flag with the value of
+    `false`, e.g. `cmd -colorize` sets `{ c: { colorize: false, }, }`.
+  * a CLA that starts with a single plus sign (`+`, U+002b) is considered a Boolean flag with the value of
+    `true`, e.g. `cmd +colorize` sets `{ c: { colorize: true, }, }`.
+  * a CLA that starts with `{` and ends with `}` is considered a JSON object literal in realm `d`.
+  * a CLA that starts with a letter and has a colon (`:`) followed by arbitrary text is called a 'facet' and
+    represents a name / value pair (the name coming before, the value coming after the colon) in realm `c`.
+    For example, `cmd colorize:always` is mapped to `{ c: { colorize: 'always', }, }`.
 
 
 # PRELIMINARY DRAFT, NO DETAIL OF THIS WILL REMAIN UNCHANGED
