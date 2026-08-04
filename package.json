@@ -1,7 +1,7 @@
 {
-  "name": "normalize-cli-arguments",
-  "version": "1.0.0",
-  "description": "",
+  "name": "jsonick",
+  "version": "0.0.0",
+  "description": "(Relaxed) JSON for command line parameters as well as data inputs and outputs",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,7 +11,6 @@
   "license": "ISC",
   "packageManager": "pnpm@11.20.0",
   "dependencies": {
-    "bricabrac-sfmodules": "^0.22.3",
     "guy": "^14.2.0",
     "interlex": "~0.14.0"
   }
