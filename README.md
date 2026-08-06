@@ -11,7 +11,6 @@ cool with that.*
 - [JSONick](#jsonick)
   - [Motivation](#motivation)
   - [JSONick](#jsonick-1)
-- [PRELIMINARY DRAFT, NO DETAIL OF THIS WILL REMAIN UNCHANGED](#preliminary-draft-no-detail-of-this-will-remain-unchanged)
   - [Tools](#tools)
     - [CLI Arguments as JSON List Literal](#cli-arguments-as-json-list-literal)
 
@@ -46,17 +45,26 @@ cool with that.*
 
 * Instead, since in reality the shapes of inputs to and outputs from Linux xommand line tools are rather
   loosely characterized by Lore instead of strictly defined by any universally-adopted Spec, one should not
-  feel too obliged to follow mediocre[^1] or downright bad[^2] precedent.
+  feel too obliged to follow mediocre[^1] or downright bad[^2] precedent. One obvious candidate for
+  formatting structured data is of course <strike>XML</strike> JSON, which is what JSONick is built upon.
 
-<!--   we're free to build
-  an alternative that is more strict in its rules and requires less work to get tools
-  to talk to each other over command line pipelines.
- -->
+> [^1]: e.g. when ImageMagick uses command line argument to implement an organically-grown agglomeration
+> that could be called its own 'language'. To quote [Brave Search
+> AI](https://search.brave.com/search?q=imagemagick+command+line+arguments%3A+Is+there+a+spec+for+its+language%3F&source=web&summary=1&conversation=09691c29381f0c95243a16cbe542a23379ba):
+> "there is no formal specification or standard for the ImageMagick command-line language. ImageMagick uses
+> a proprietary command-line interface that evolved significantly between major versions. In ImageMagick 6
+> and earlier, the syntax was described as "ill-defined" and "broken," with operators often applied in
+> unpredictable orders."
 
-> [^1]: Definition.
->
-> [^2]: Definition
->
+> [^2]: e.g. when different low-level tools employ conflicting standards how to deal with Unicode characters
+> outside of US-ASCII; this, of, course also applies to the gazillions of configuration files and
+> informational data such as `/etc/mtab` for mounted filesystems whihc may conatin lines like
+> `/home/xxx/bin/GhosTTY/Ghostty-1.2.3-x86_64.AppImage /tmp/.mount_Ghostremp15621361697402718996 fuse.dwarfs
+> ro,nosuid,nodev,relatime,user_id=1000,group_id=1000 0 0` that uses a mixture of space- and comma-delimited
+> syntax (for mount options, technically a nested complex field) with no quotes in sight. One can decry XML
+> and even JSON for their relative amounts of wasted bytes but does that concern weigh more heavily than the
+> difficulty of parsing sources like `/etc/mtab` where each source is a law unto itself, while ensuring
+> nothing breaks when the occasional rogue entry contains a space, a comma or a fancy accented letter?
 
 ## JSONick
 
@@ -66,7 +74,8 @@ cool with that.*
     * typically, the input will be a standard JSON-formatted object literal
     * in the future we will extend JSON to include convenient shortcuts, see below
   * must accept pipelined data, meaning `cmd {}` is equivalent to `printf '{}' | cmd`
-  * may additionally accept data in other formats, typically announced by a command line switch or a file name
+  * may additionally accept data in other formats, typically announced by a command line switch or a file
+    name
 
 * JSONick-compliant command line tools whose outputs are text oriented:
 
@@ -81,12 +90,12 @@ cool with that.*
 
 * `c` and `d` are called 'modules' of data in the below.
 
-* Realms `c` and `d` are instantiated as attributes on the object returned by the normalization method:
+* Modules `c` and `d` are instantiated as attributes on the object returned by the normalization method:
   `{"c":{},"d":{}}`. This is called the Top Level Object (TLO).
 
-* In the current iteration, the setting(s) for the data module must be written as JSON object literals on the
-  command line. Future versions may allow positional parameters where alternative settings are allowed for
-  convenience. However, both `c` and `d` attributes of the TOL will always remain to objects.
+* In the current iteration, the setting(s) for the data module must be written as JSON object literals on
+  the command line. Future versions may allow positional parameters where alternative settings are allowed
+  for convenience. However, both `c` and `d` attributes of the TOL will always remain to objects.
 
 * If JSONick-compliant command line tools provide command line arguments (CLAs), they must follow these
   guidelines:
@@ -115,7 +124,7 @@ cool with that.*
     * `cmd '{x:3}'` ≍ `cmd d:'{x:3}'` ≍ `cmd`
 
 
-# PRELIMINARY DRAFT, NO DETAIL OF THIS WILL REMAIN UNCHANGED
+<!-- # PRELIMINARY DRAFT, NO DETAIL OF THIS WILL REMAIN UNCHANGED
 
 > # ??? paramize
 >
@@ -191,6 +200,7 @@ cool with that.*
 >   v1; a repeated flag simply overwrites.
 > * deep/recursive merging of nested objects across sources is intentionally out of scope, to keep merge
 >   semantics predictable and easy to reason about.
+ -->
 
 ## Tools
 
