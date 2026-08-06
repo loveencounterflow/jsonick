@@ -53,7 +53,10 @@ cool with that.*
   to talk to each other over command line pipelines.
  -->
 
-> [^1]: Definition. [^2]: Definition
+> [^1]: Definition.
+>
+> [^2]: Definition
+>
 
 ## JSONick
 
