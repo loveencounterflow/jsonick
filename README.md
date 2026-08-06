@@ -42,10 +42,18 @@ cool with that.*
   custom parsers to digest the output of tools. Assembling properly formatted command lines can also be
   difficult.
 
-* We can not and will not change this (for now).
+* We can not change this (for now).
 
-* Instead, let's build an alternative that is more strict in its rules and requires less work to get tools
+* Instead, since in reality the shapes of inputs to and outputs from Linux xommand line tools are rather
+  loosely characterized by Lore instead of strictly defined by any universally-adopted Spec, one should not
+  feel too obliged to follow mediocre[^1] or downright bad[^2] precedent.
+
+<!--   we're free to build
+  an alternative that is more strict in its rules and requires less work to get tools
   to talk to each other over command line pipelines.
+ -->
+
+> [^1]: Definition. [^2]: Definition
 
 ## JSONick
 
@@ -68,18 +76,40 @@ cool with that.*
   modelled as an an object with two members, `c` for 'control' (whose attributes are set by command line
   arguments) and `d` for 'data', that is, the 'business data' that the command works on.
 
-* `c` and `d` are called 'realms' of data in the below.
+* `c` and `d` are called 'modules' of data in the below.
+
+* Realms `c` and `d` are instantiated as attributes on the object returned by the normalization method:
+  `{"c":{},"d":{}}`. This is called the Top Level Object (TLO).
+
+* In the current iteration, the setting(s) for the data module must be written as JSON object literals on the
+  command line. Future versions may allow positional parameters where alternative settings are allowed for
+  convenience. However, both `c` and `d` attributes of the TOL will always remain to objects.
 
 * If JSONick-compliant command line tools provide command line arguments (CLAs), they must follow these
   guidelines:
+
   * a CLA that starts with a single hypen-minus (`-`, U+002d) is considered a Boolean flag with the value of
-    `false`, e.g. `cmd -colorize` sets `{ c: { colorize: false, }, }`.
+    `false`, e.g. `cmd -colorize` sets `{"c":{"colorize": false}}`.
+
   * a CLA that starts with a single plus sign (`+`, U+002b) is considered a Boolean flag with the value of
-    `true`, e.g. `cmd +colorize` sets `{ c: { colorize: true, }, }`.
-  * a CLA that starts with `{` and ends with `}` is considered a JSON object literal in realm `d`.
+    `true`, e.g. `cmd +colorize` sets `{"c":{"colorize": true}}`.
+
   * a CLA that starts with a letter and has a colon (`:`) followed by arbitrary text is called a 'facet' and
-    represents a name / value pair (the name coming before, the value coming after the colon) in realm `c`.
-    For example, `cmd colorize:always` is mapped to `{ c: { colorize: 'always', }, }`.
+    represents a name / value pair (the name coming before, the value coming after the colon) in module `c`.
+    For example, `cmd colorize:always` is mapped to `{"c":{"colorize":"always"}}`.
+
+  * a CLA that starts with `{` and ends with `}` is considered a JSON object literal in module `d`. In the
+    current iteration only values that are accepted by JavaScript's `JSON.parse()` method are accepted. In
+    later version, convenience notations may become acceptable, such as `{+has_agreed}` for
+    `{"has_agreed":true}`.
+
+  * The aim here is to allow the exact same syntax inside and outside of braces so that the syntax for
+    modules `c` and `d` becomes identical except for the surrounding braces. The paralleslism will be
+    furthered by stipulating that top-level braces in command line argument values will be implicitly
+    understood as applying to module `d` unless explicitly marked otherwise with either `c:{}` for the
+    control module or `t:{}` for the TLO. At that point, the following equivalences will hold:
+
+    * `cmd '{x:3}'` ≍ `cmd d:'{x:3}'` ≍ `cmd`
 
 
 # PRELIMINARY DRAFT, NO DETAIL OF THIS WILL REMAIN UNCHANGED
