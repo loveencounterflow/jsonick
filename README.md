@@ -13,7 +13,7 @@ humans (readable) and nice for machines (parsable)*
   - [JSONick](#jsonick-1)
     - [Naming the Parts](#naming-the-parts)
     - [Conventions for Command Line Arguments](#conventions-for-command-line-arguments)
-    - [Phases 1](#phases-1)
+    - [Phase 1](#phase-1)
       - [Example 1.1](#example-11)
     - [Phase 2](#phase-2)
     - [XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX](#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
@@ -109,7 +109,7 @@ To capture all the fine details and remain configurable, JSONick processes the c
   For example, `cmd colorize:always` is mapped to `{"c":{"colorize":"always"}}`.
 
 
-### Phases 1
+### Phase 1
 
 Phase 1 consists of looking at each command line argument and building an object of a predetermined shape in
 a predetermined way. Phase 1 is not configurable and should never terminate with a non-null status code;
