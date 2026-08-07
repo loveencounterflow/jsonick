@@ -15,7 +15,7 @@ humans (readable) and nice for machines (parsable)*
     - [Conventions for Command Line Arguments](#conventions-for-command-line-arguments)
     - [Phases 1](#phases-1)
       - [Example 1.1](#example-11)
-    - [Phases 2](#phases-2)
+    - [Phase 2](#phase-2)
     - [XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX](#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
   - [Tools](#tools)
     - [CLI Arguments as JSON List Literal](#cli-arguments-as-json-list-literal)
@@ -159,7 +159,7 @@ not look like a Boolean or Facet Option, does not look like a JSON literal, and 
 being payload, either.
 
 
-### Phases 2
+### Phase 2
 
 
 
