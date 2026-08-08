@@ -23,6 +23,7 @@ humans (readable) and nice for machines (parsable)*
     - [Metadata, Multiple Operands](#metadata-multiple-operands)
   - [See Also](#see-also)
   - [Open Questions](#open-questions)
+  - [To Do](#to-do)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -133,7 +134,11 @@ the *cdef* object are in turn called called **slots**; they all have single-char
 * slot `e`: **E**rrors is a list of everything on the command line that could not be parsed.
 
 * slot `f`: **F**ile either `null` or, if the tool is on the receiving end of a UNIX pipe, `STDIN` (i.e.
-  `process.stdin` in NodeJS).
+  `process.stdin` in NodeJS). Observe that when `cdef` is actually printed to STDOUT instead of used as an
+  in-process library, `cdef.f` will be replaced for the purpose by a non-empty string; this of course is
+  necessitated by the fact that JSON has no provision to render a stream of bytes.
+  * At the moment the symbolic string is `FIFO`, but that may change in the future.
+
 
 #### Example 1.1
 
@@ -363,7 +368,7 @@ slot and a `d` (data, payload) slot—which one is it for `pamphlet.css`? Should
 
 Well, no. `input:pamphlet.css` is OK. One might say it is metadata about an operand of our imaginary
 `markdown-to-webpage` tool, and of course if `input:pamphlet.css` is metadata, then so is `pamphlet.html`:
-it is, after all, just a pointer to the location where the payload may be found. Mow, in the case of
+it is, after all, just a pointer to the location where the payload may be found. Now, in the case of
 `markdown-to-webpage --input=pamphlet.css ...`, a piece of operative metadata will be thrown into the `c`
 slot, so become part of the 'control' configuration. But in the case of  `markdown-to-webpage ...
 pamphlet.html`, a very similar piece of operational metadata ends up as an element inside the `d` slot. So
@@ -396,13 +401,28 @@ kind of sitting on the fence.
 * [—] Classical options are marked by `-x` or `-xxx`; JSONick Boolean options are marked by `+` and `-`;
   only facet options are not marked by a prefix, only by a colon that appears after the option name.
   Shouldn't facets also have a prefix such as, maybe
+  * `@name:value`,
+  * `^name:value`,
+  * `&name:value`,
+  * `*name:value`,
+  * `:name:value`,
   * `?name:value`,
   * `$name:value`,
   * `%name:value`, or, indeed
   * `+name:value` or
   * `-name:value`, neither of which would collide with the use of `+name`, `-name` for Booleans.
+  * A suitable prefix could make many strings such as URLs (as in `https://sqlite.org`) less likely to be
+    mistaken for facets.
+  * using `$` collides with its usage as shell variable markers.
+  * When any prefix gets adopted, must clarify what happens in the case of `cmd %name: xxx`: is the value of
+    field `name` empty or is it `xxx` (which in this case appears as not the same but the next argument).
 
-  A suitable prefix could make many strings such as URLs (as in `https://sqlite.org`) less likely to be
-  mistaken for facets.
+## To Do
 
-  * using `$` collides with their usage as shell variable markers.
+* [—] Write about how `get_type_of_stdin()` returns `null` for `/dev/null` inputs which may not be
+  sufficient under some scenarios
+* [—] Write about how `cmd-1 | cmd-2 < file` is not a meaningful construct and what consumers can expect
+  if they encounter it
+  * [+] How is `cmd-1 | cmd-2` to be treated when compared to `cmd-2 < file`? Is it possible /meaningful to write
+    `cmd-1 | cmd-2 < file`?
+
