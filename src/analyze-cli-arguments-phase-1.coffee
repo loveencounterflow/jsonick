@@ -71,9 +71,14 @@ demo = ->
     gnd.new_token 'other',  rx"(?<string>.+)$",                          { data: { slot: 'e', type: 'other', name: null,                     }, }
     return R
   #---------------------------------------------------------------------------------------------------------
-  get_input_stream = ->
+  get_type_of_stdin = ->
     stats = FS.fstatSync 0
-    return process.stdin if stats.isFIFO()
+    # return process.stdin if stats.isFIFO()
+    return 'tty'    if process.stdin.isTTY
+    return 'pipe'   if stats.isFIFO()
+    return 'file'   if stats.isFile()
+    return 'socket' if stats.isSocket()
+    # return 'other'   # z.B. /dev/null, Block Device
     return null
   #---------------------------------------------------------------------------------------------------------
   new_facet = ( name, value ) -> R = Object.create null; R[ name ] = value; R
@@ -84,7 +89,7 @@ demo = ->
   #---------------------------------------------------------------------------------------------------------
   parse_argv = ( argv = null ) ->
     argv        = if argv? then [ argv..., ] else process.argv[ 2 .. ]
-    R           = { a: argv, c: [], d: [], e: [], f: get_input_stream(), }
+    R           = { a: argv, c: [], d: [], e: [], f: get_type_of_stdin(), }
     debug 'Ωjsonick___1', argv
     past_fence  = false
     for argument in argv
