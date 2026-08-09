@@ -131,7 +131,7 @@ the *cdef* object are in turn called called **slots**; they all have single-char
 * slot `d`: **D**ata, the 'business data' a.k.a. the 'payload': a list of values (objects, Booleans, numbers
   and strings) intended as data inputs to the receiving command line tool.
 
-* slot `e`: **E**rrors is a list of everything on the command line that could not be parsed.
+* slot `e`: **E**rratic, a list of everything on the command line that could not be parsed.
 
 * slot `f`: **F**ile either `null` or, if the tool is on the receiving end of a UNIX pipe, `STDIN` (i.e.
   `process.stdin` in NodeJS). Observe that when `cdef` is actually printed to STDOUT instead of used as an
