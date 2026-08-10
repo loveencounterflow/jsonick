@@ -13,6 +13,8 @@ humans (readable) and nice for machines (parsable)*
   - [JSONick](#jsonick-1)
     - [Naming the Parts](#naming-the-parts)
     - [Conventions for Command Line Arguments](#conventions-for-command-line-arguments)
+      - [Overarching Rules](#overarching-rules)
+      - [Detailed Rules for each Argument Type](#detailed-rules-for-each-argument-type)
     - [Phase 1](#phase-1)
       - [Example 1.1](#example-11)
     - [Phase 2](#phase-2)
@@ -99,16 +101,61 @@ To capture all the fine details and remain configurable, JSONick processes the c
 
 ### Conventions for Command Line Arguments
 
-* An argument that starts with a single hypen-minus (`-`, U+002d) is considered a Boolean flag with the
-  value of `false`, e.g. `cmd -colorize` sets `{"c":{"colorize": false}}`.
+#### Overarching Rules
 
-* An argument that starts with a single plus sign (`+`, U+002b) is considered a Boolean flag with the value
-  of `true`, e.g. `cmd +colorize` sets `{"c":{"colorize": true}}`.
+JSONick follows some very simple rules to parse command line arguments:
 
-* An argument that starts with a letter and has a colon (`:`) followed by arbitrary text is called a 'facet'
-  and represents a name / value pair (the name coming before, the value coming after the colon) in slot `c`.
-  For example, `cmd colorize:always` is mapped to `{"c":{"colorize":"always"}}`.
+* Each argument is, in Phase 1, classified either as an option (control) or as an operand (data).
+* Each argument is classified based on its first character, of which there are six special ones:
+  * percent sign (`%`), leading a so-called escaped value whose first character might otherwise trigger one
+    of the below interpretations;
+  * hyphen-minus `-`, leading either a fence `--` or a negative Boolean option (as in, `-colors`);
+  * plus `+`, leading a positive Boolean (as in, `+colors`);
+  * colon `:`, leading a faced i.e. a named value (as in, `:colors=always`);
+  * left brace `{`, leading a JSON object literal (as in, `{"colors":"always"}`); and
+  * left bracket `[`, leading a JSON list literal (as in, `[true,false,56,"colors",null]}`);
+* When an argument has one of the above leading characters (thereby 'pretends' to be something) but the rest
+  of the argument is not correctly formed (thereby failing to 'live up to' the expectations for that prefix
+  as laid out below), the argument is classified as an error. Consumers may decide how to deal with errors.
+* In the below, the term 'name' specifically means "a legal JavaScript identifier albeit one where hyphens
+  are acceptable in non-initial positions".
+* As yet, parsing of apparently numerical arguments is not attempted outside of JSON object and list
+  literals and explicit configuration of Phase 2 parsing; the reason is simply that an apparently
+  number-like literal `'+9837.765'` may just as well represent some kind of numerical code. Whether plus and
+  minus followed by a digit should be considered a special form of literal instead of an erroneous Boolean
+  option is under consideration; this more generous interpretation would probably concern all arguments that
+  match `/^[+\-]?\.?[0-9]/v`, turning things like `+.45cm` and `-3` into legal operands.
 
+#### Detailed Rules for each Argument Type
+
+
+* An argument that starts with a single hyphen-minus (`-`, U+002d) is either:
+  * when of length 2 and followed by another hyphen-minus, a 'fence'; everything coming after it is not
+    parsed and considered an operand.
+  * considered a candidate for a Boolean flag with the value of `false`. It must directly be followed by a
+    name, e.g. `cmd -colorize` sets `{"c":{"colorize": false}}`.
+
+* An argument that starts with a single plus sign (`+`, U+002b) is considered a candidate for a Boolean flag
+  with the value of `true`. It must directly be followed by a name, e.g. `cmd +colorize` sets
+  `{"c":{"colorize": true}}`.
+
+* An argument that starts with a colon (`:`, U+003a) is considered a candidate for a 'facet', i.e. a name /
+  value pair. It must be followed by 1) an option name, then 2) an equals sign (`=`, U+003d), then 3) a
+  (possibly empty) value. For example, `cmd :verbosity=eloquent` sets the option `{ verbosity: 'eloquent'
+  }`.
+
+* An argument that starts with a percent sign (`%`, U+0025) is considered an escaped operand. The percent
+  sign blocks leading punction such as `+`, `-`, `:`, `{` and `[` from triggering recognition as a
+  special-syntax element. For example, to add the text `+good` as an operand to `cmd`, write `cmd %+good`.
+  To start an operand with a percent sign, use two percent signs.
+
+* An argument that starts with a left curly brace (`{`, U+007b) is considered a candidate for a JSON object
+  literal. The argument must constitute a syntactically correct JSON object literal; if so, the object value
+  will be parsed and become an operand of the command.
+
+* An argument that starts with a left square bracket (`[`, U+005b) is considered a candidate for a JSON list
+  literal. The argument must constitute a syntactically correct JSON list literal; if so, the list value
+  will be parsed and become an operand of the command.
 
 ### Phase 1
 
@@ -133,11 +180,17 @@ the *cdef* object are in turn called called **slots**; they all have single-char
 
 * slot `e`: **E**rratic, a list of everything on the command line that could not be parsed.
 
-* slot `f`: **F**ile either `null` or, if the tool is on the receiving end of a UNIX pipe, `STDIN` (i.e.
-  `process.stdin` in NodeJS). Observe that when `cdef` is actually printed to STDOUT instead of used as an
-  in-process library, `cdef.f` will be replaced for the purpose by a non-empty string; this of course is
-  necessitated by the fact that JSON has no provision to render a stream of bytes.
-  * At the moment the symbolic string is `FIFO`, but that may change in the future.
+* slot `i` and slot `o`: **I**nput and **O**utput. These two slots are each set to one of `'tty'`, `'pipe'`,
+  `'file'`, `'socket'`, `'other'`, depending on the status of `process.stdin` and `process.stdout`,
+  respectively.
+
+* slot `t`: **T**ypes; this is an object with properties `c`, `d`, `e`; each of these is a list of token
+  types that were recognized during arguments parsing. Each element corresponds to an element in the *cdef*
+  object, so if there is an element at index 2 as in `{ "c": [ ..., ..., { "foo": true, } ] }`, retrieving
+  `cdef.t.c[ 2 ]` will tell you that originated as a `'Boolean'`. Likewise, and perhaps more interestingly,
+  a command line like `cmd '{oops'` will result in `cdef.e[0]` being set to `'{oops'` and `cdef.t.e[0]` to
+  `eobjectlit`, indicating an 'erroneous object literal' was detected.
+
 
 
 #### Example 1.1
@@ -256,7 +309,7 @@ being payload, either.
 >   stderr, causing a non-zero exit code — `paramize` never guesses or repairs broken JSON.
 > * named parameter: starts with `-` or `--` followed by the full name; `-` and `--` are treated identically
 >   and carry no semantic difference.
-> * named parameter with implicit value: naming a parameter with no attached value sets it to boolean `true`,
+> * named parameter with implicit value: naming a parameter with no attached value sets it to Boolean `true`,
 >   e.g. `cmd -foo` and `cmd --foo` both yield `{"foo":true}`.
 > * named parameter with explicit value: a value can be attached with `=` or `:` and *no* intervening
 >   whitespace, e.g. `cmd --foo=true`, `cmd -foo:true`.
