@@ -55,21 +55,29 @@ read_stdin = ->
 
 #-----------------------------------------------------------------------------------------------------------
 fetch_input = ->
+  R = ''
+  #.........................................................................................................
+  ### TAINT this is stopgap re-implementation of phase 1 argument parsing; in the future to be replaced
+  with functionality of `analyze-cli-arguments-phase-1` ###
+  for element in process.argv[ 2 .. ]
+    continue if /^[+\-:]/v.test element
+    R += element
+  #.........................................................................................................
+  return R if R.length > 0
+  #.........................................................................................................
   type_of_stdin = get_type_of_stdin()
   switch type_of_stdin
     when 'tty'
       R = process.argv[ 2 .. ].join ' '
-    when 'pipe', 'file'
+    when 'pipe', 'file', 'socket'
       R = await read_stdin()
-    when 'socket'
-      warn "Ωjsonick___2 type of input not implemented: #{rpr type_of_stdin}"
     else
       warn "Ωjsonick___3 unknown type of input: #{rpr type_of_stdin}"
+  #.........................................................................................................
   return R
 
 #===========================================================================================================
 demo = ->
-  # argv        = if argv? then [ argv..., ] else process.argv[ 2 .. ]
   # console.log cdef
   input       = await fetch_input()
   use_colors  = process.stdout.isTTY
