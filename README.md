@@ -130,34 +130,56 @@ JSONick follows some very simple rules to parse command line arguments:
 
 #### Detailed Rules for each Argument Type
 
+In Phase 1, each command line argument gets assigned one of the following types (`t`) and slots (`s`):
 
-* An argument that starts with a single hyphen-minus (`-`, U+002d) is either:
-  * when of length 2 and followed by another hyphen-minus, a 'fence'; everything coming after it is not
-    parsed and considered an operand.
-  * considered a candidate for a Boolean flag with the value of `false`. It must directly be followed by a
-    name, e.g. `cmd -colorize` sets `{"c":{"colorize": false}}`.
+* 'post-fence', `{ t: 'pfn', slot: 'd', }`, for all arguments following a `--` (fence) argument;
+* 'bare', `{ t: 'bar', slot: 'd', }`;
+* 'escaped', `{ t: 'esc', slot: 'd', }`;
+* 'numeric', `{ t: 'num', slot: 'd', }`;
+* 'boolean', `{ t: 'bol', slot: 'c', }` (can go to slot `d` if explicitly marked);
+* 'facet', `{ t: 'fac', slot: 'c', }` (can go to slot `d` if explicitly marked);
+* (JSON) 'list' (literal), `{ t: 'lst', slot: 'd', }`;
+* (JSON) 'object' (literal), `{ t: 'obj', slot: 'd', }`.
 
-* An argument that starts with a single plus sign (`+`, U+002b) is considered a candidate for a Boolean flag
-  with the value of `true`. It must directly be followed by a name, e.g. `cmd +colorize` sets
-  `{"c":{"colorize": true}}`.
+Here is how arguments are processed:
+
+* An argument that consists of two hyphen-minus (`--`, U+0026 U+0026) is a fence.
+
+* An argument that starts with an optional single hyphen-minus (`-`, U+002d) or plus sign (`+`, U+002b),
+  followed by an optional full stop (`.`, U+002e), followed by one or more digits (`/[0-9]/`, U+0030..U+0039)
+  is considered numeric (`num`) and is classified as an operand.
+
+* An argument that starts with a single hyphen-minus (`-`, U+002d) is considered a candidate for a Boolean
+  flag with the value of `false`. It must directly be followed by a name, e.g. `cmd -colorize` sets
+  `{"c":{"colorize": false}}`.
+
+* An argument that starts with a single hyphen-minus but is not followed by a name is an error and goes to
+  slot `e`.
+
+* An argument that starts with a plus sign (`+`, U+002b) is considered a candidate for a Boolean flag with
+  the value of `true`. It must directly be followed by a name, e.g. `cmd +colorize` sets `{"c":{"colorize":
+  true}}`.
+
+* An argument that starts with a plus sign but is not followed by a name is an error and goes to slot `e`.
 
 * An argument that starts with a colon (`:`, U+003a) is considered a candidate for a 'facet', i.e. a name /
   value pair. It must be followed by 1) an option name, then 2) an equals sign (`=`, U+003d), then 3) a
   (possibly empty) value. For example, `cmd :verbosity=eloquent` sets the option `{ verbosity: 'eloquent'
   }`.
 
+* An argument that starts with a colon but doesn't comply with the rule above this one is an error and goes
+  to slot `e`.
+
 * An argument that starts with a percent sign (`%`, U+0025) is considered an escaped operand. The percent
   sign blocks leading punction such as `+`, `-`, `:`, `{` and `[` from triggering recognition as a
-  special-syntax element. For example, to add the text `+good` as an operand to `cmd`, write `cmd %+good`.
-  To start an operand with a percent sign, use two percent signs.
+  special-syntax element. For example, to add the text `+good` as an operand to `cmd` one can write `cmd
+  %+good`. To start an operand with a percent sign, use two percent signs.
 
 * An argument that starts with a left curly brace (`{`, U+007b) is considered a candidate for a JSON object
-  literal. The argument must constitute a syntactically correct JSON object literal; if so, the object value
-  will be parsed and become an operand of the command.
+  literal. It is put into the `d` slot but not parsed which is left to Phase 2.
 
 * An argument that starts with a left square bracket (`[`, U+005b) is considered a candidate for a JSON list
-  literal. The argument must constitute a syntactically correct JSON list literal; if so, the list value
-  will be parsed and become an operand of the command.
+  literal. It is put into the `d` slot but not parsed which is left to Phase 2.
 
 ### Phase 1
 
