@@ -109,8 +109,9 @@ JSONick follows some very simple rules to parse command line arguments:
 * Each argument is classified based on its first character, of which there are six special ones:
   * percent sign (`%`), leading a so-called escaped value whose first character might otherwise trigger one
     of the below interpretations;
-  * hyphen-minus `-`, leading either a fence `--` or a negative Boolean option (as in, `-colors`);
-  * plus `+`, leading a positive Boolean (as in, `+colors`);
+  * hyphen-minus `-`, leading either a fence `--`, a numeric string, or a negative Boolean option (as in,
+    `-colors`);
+  * plus `+`, leading to either a numeric string or a positive Boolean (as in, `+colors`);
   * colon `:`, leading a faced i.e. a named value (as in, `:colors=always`);
   * left brace `{`, leading a JSON object literal (as in, `{"colors":"always"}`); and
   * left bracket `[`, leading a JSON list literal (as in, `[true,false,56,"colors",null]}`);
@@ -119,12 +120,13 @@ JSONick follows some very simple rules to parse command line arguments:
   as laid out below), the argument is classified as an error. Consumers may decide how to deal with errors.
 * In the below, the term 'name' specifically means "a legal JavaScript identifier albeit one where hyphens
   are acceptable in non-initial positions".
-* As yet, parsing of apparently numerical arguments is not attempted outside of JSON object and list
-  literals and explicit configuration of Phase 2 parsing; the reason is simply that an apparently
-  number-like literal `'+9837.765'` may just as well represent some kind of numerical code. Whether plus and
-  minus followed by a digit should be considered a special form of literal instead of an erroneous Boolean
-  option is under consideration; this more generous interpretation would probably concern all arguments that
-  match `/^[+\-]?\.?[0-9]/v`, turning things like `+.45cm` and `-3` into legal operands.
+* Arguments that start with an optional plus or minus sign `/[+\-]?/`, followed by an optional dot `/[.]?/`,
+  followed by a digit `/[0-9]/` are considered numeric strings and, hence, operands. This rule turns
+  notations like `+.45cm`, `800.3` and `-3` into legal operands.
+* Parsing of numeric strings is not attempted outside of JSON object and list literals and left to the
+  explicit handling in Phase 2; the reason being that an apparently number-like literal `'+9837.765'` may
+  just as well represent some kind of numerical code.
+
 
 #### Detailed Rules for each Argument Type
 
