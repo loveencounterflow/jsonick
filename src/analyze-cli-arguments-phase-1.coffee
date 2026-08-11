@@ -69,6 +69,7 @@ new_grammar = ->
   R   = new Grammar { name: 'g', linking: false, emit_signals: false, }
   gnd = R.new_level { name: 'gnd', }
   gnd.new_token 'fence',  '--',                                                     { data: { slot: null, type: 'fence', string: '--',  }, }
+  gnd.new_token 'numberlit',  rx"(?<string>[+\-]?[.]?[0-9].*)$",                    { data: { slot: 'd', type: 'numberlit', }, }
   gnd.new_token 'escaped',    rx"%(?<string>.+)$",                                  { data: { slot: 'd', type: 'escaped', }, }
   gnd.new_token 'btrue',      rx"\+((?<xslot>d)\.)?(?<name>#{nre})$",               { data: { slot: 'c', type: 'boolean', string: 'true',   value: true,  }, }
   gnd.new_token 'bfalse',     rx"-((?<xslot>d)\.)?(?<name>#{nre})$",                { data: { slot: 'c', type: 'boolean', string: 'false',  value: false, }, }
@@ -130,9 +131,9 @@ parse_argv = ( argv = null ) ->
     slot = xslot ? slot
     #.......................................................................................................
     switch type
-      when 'boolean'                  then R[ slot ].push new_facet name, value
-      when 'facet'                    then R[ slot ].push new_facet name, string
-      when 'other', 'escaped', 'word' then R[ slot ].push string
+      when 'boolean'                                then R[ slot ].push new_facet name, value
+      when 'facet'                                  then R[ slot ].push new_facet name, string
+      when 'other', 'escaped', 'word', 'numberlit'  then R[ slot ].push string
       #.....................................................................................................
       when 'objectlit', 'listlit'
         method = if type is 'objectlit' then object_from_objectlit else list_from_listlit
