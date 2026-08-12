@@ -1,5 +1,5 @@
 {
-  "name": "jsonick",
+  "name": "sigil",
   "version": "0.0.0",
   "description": "(Relaxed) JSON for command line parameters as well as data inputs and outputs",
   "main": "lib/main.js",

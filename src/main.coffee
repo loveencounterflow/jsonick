@@ -37,10 +37,11 @@
 #   internals             } = require 'interlex'
 # FS                        = require 'fs'
 
+{}
 
 
 #===========================================================================================================
-# module.exports = { nfa, get_signature, Normalize_function_arguments, Template, internals, }
+module.exports = { nfa, get_signature, Normalize_function_arguments, Template, internals, }
 
 #===========================================================================================================
 # if module is require.main then do =>
