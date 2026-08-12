@@ -107,7 +107,9 @@ To capture all the fine details and remain configurable, JSONick processes the c
 JSONick follows some very simple rules to parse command line arguments:
 
 * Each argument is, in Phase 1, classified either as an option (control) or as an operand (data).
-* Each argument is classified based on its first character, of which there are six special ones:
+* An empty argument such as in `cmd ''` is always an operand.
+* Each argument is classified based on its first character, of which there are six special ones (plus the
+  digits and the dot used to recognize numbers):
   * percent sign (`%`), leading a so-called escaped value whose first character might otherwise trigger one
     of the below interpretations;
   * hyphen-minus `-`, leading either a fence `--`, a numeric string, or a negative Boolean option (as in,
