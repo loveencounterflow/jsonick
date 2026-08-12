@@ -19,14 +19,14 @@ humans (readable) and nice for machines (parsable)*
     - [Phase 1](#phase-1)
       - [Example 1.1](#example-11)
     - [Phase 2](#phase-2)
-    - [XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX](#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)
   - [Tools](#tools)
     - [CLI Arguments as JSON List Literal](#cli-arguments-as-json-list-literal)
+    - [Beautify](#beautify)
   - [Notes](#notes)
     - [Metadata, Multiple Operands](#metadata-multiple-operands)
   - [See Also](#see-also)
-  - [Open Questions](#open-questions)
   - [To Do](#to-do)
+  - [Is Done](#is-done)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -206,8 +206,8 @@ object have at least 2 and up to 4 properties:
 * `n` (optional): In the case of types `bol` (Boolean option) and `fac` (facet option), the name of the
   option.
 
-* `v` (optional): Missing only if the argument was put into slot `e`; retrieve original form from `cde.a` for
-  error messages. Otherwise (if the entry representing the argument was put into `c` or `d`):
+* `v` (optional): Missing only if the argument was put into slot `e`; retrieve original form from `cde.a`
+  for error messages. Otherwise (if the entry representing the argument was put into `c` or `d`):
   * In the case of type `bol` (Boolean option), `v` is either `true` or `false`.
   * In the case of `fac` (facet option), `v` represents the part of the argument that came after the equals
     sign (which may be an empty string).
@@ -256,8 +256,8 @@ prominent members) the ***cde*** object. The attributes of the *cde* object are 
 
 #### Example 1.1
 
-The command line `node jsonick/lib/main.js +verbose -verbose -- wat | ./beautify` will produce this
-(reformatted) JSON representation of the *cde* object:
+The command line `node jsonick/analyze-cli-arguments-phase-1 +verbose -verbose -- wat | ./beautify` will
+produce this (reformatted) JSON representation of the *cde* object:
 
 ```
 {
@@ -276,10 +276,12 @@ The command line `node jsonick/lib/main.js +verbose -verbose -- wat | ./beautify
 
 ### Phase 2
 
+**To Be Written**
 
 
+<!--
 
-### XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+Loose ends
 
 * JSONick-compliant command line tools whose inputs are text oriented:
 
@@ -315,112 +317,7 @@ The command line `node jsonick/lib/main.js +verbose -verbose -- wat | ./beautify
 
     and both outputs are still JSONick-compliant.
 
-
-
-* In the current iteration, the setting(s) for the data slot must be written as JSON object literals on
-  the command line. Future versions may allow positional parameters where alternative settings are allowed
-  for convenience. However, both `c` and `d` attributes of the TOL will always remain to objects.
-
-* If JSONick-compliant command line tools provide command line arguments (CLAs), they must follow these
-  guidelines:
-
-
-  * a CLA that starts with `{` and ends with `}` is considered a JSON object literal in slot `d`. In the
-    current iteration only values that are accepted by JavaScript's `JSON.parse()` method are accepted. In
-    later version, convenience notations may become acceptable, such as `{+has_agreed}` for
-    `{"has_agreed":true}`.
-
-  * The aim here is to allow the exact same syntax inside and outside of braces so that the syntax for
-    slots `c` and `d` becomes identical except for the surrounding braces. The paralleslism will be
-    furthered by stipulating that top-level braces in command line argument values will be implicitly
-    understood as applying to slot `d` unless explicitly marked otherwise with either `c:{}` for the
-    control slot or `t:{}` for the TLO. At that point, the following equivalences will hold:
-
-    * `cmd '{x:3}'` ≍ `cmd d:'{x:3}'` ≍ `cmd`
-
-* the parser must not silently ignore any part of the command line input; each part must be reflected as an
-  entry in slot `c`, in slot `d`, or cause an error.
-  * When the name of an option is used more than once, the default is to terminate wth an error.
-  * However, tool authors may configure command line parsing such that all or some names may become either
-    overrides or multi-valued options (e.g. a number of file paths each labeled `input:`)
-
-<!-- # PRELIMINARY DRAFT, NO DETAIL OF THIS WILL REMAIN UNCHANGED
-
-> # ??? paramize
->
-> A small, portable specification (plus reference implementations in C and JavaScript) for merging
-> command-line flags, positional JSON arguments, and piped stdin JSON into a single, canonical JSON object —
-> so that tools which speak JSON in and JSON out don't each have to reinvent argument handling.
->
-> ## Specification
->
-> * input sources: a tool built on `paramize` accepts up to three kinds of input — JSON piped via stdin, zero
->   or more positional JSON arguments, and zero or more named CLI flags.
-> * precedence: stdin JSON is the baseline, positional JSON arguments are merged on top of it left to right,
->   and named CLI flags are merged last and always win.
-> * merge depth: merging is shallow at the top level only; a key present in a later source fully replaces the
->   value from an earlier source, including whole arrays and whole nested objects — there is no recursive/deep
->   merge.
-> * missing stdin: if stdin is empty, closed, or not piped, it is treated as `{}` rather than as an error.
-> * malformed JSON: any malformed JSON from stdin or from a positional argument is a hard error, written to
->   stderr, causing a non-zero exit code — `paramize` never guesses or repairs broken JSON.
-> * named parameter: starts with `-` or `--` followed by the full name; `-` and `--` are treated identically
->   and carry no semantic difference.
-> * named parameter with implicit value: naming a parameter with no attached value sets it to Boolean `true`,
->   e.g. `cmd -foo` and `cmd --foo` both yield `{"foo":true}`.
-> * named parameter with explicit value: a value can be attached with `=` or `:` and *no* intervening
->   whitespace, e.g. `cmd --foo=true`, `cmd -foo:true`.
-> * value casting: an explicit value is cast to JSON types where unambiguous — `true`/`false` become Boolean,
->   a string matching a JSON number literal becomes Number, `null` becomes JSON null — and falls back to a
->   plain string otherwise.
-> * forcing a string: a value can be forced to remain a string even if it looks like another type by wrapping
->   it in single quotes shielded from the shell, e.g. `--id:'"true"'`.
-> * repeated flags: if the same flag name is given more than once, the last occurrence wins; earlier
->   occurrences are discarded silently.
-> * negative-number disambiguation: a bare token consisting of `-` followed immediately by digits (e.g. `-5`)
->   is treated as a value, not as a flag name, so it is only ever consumed as the value of a preceding flag or
->   rejected as a stray positional token.
-> * positional tokens: any CLI argument that is not a recognized flag and not valid JSON is a hard error —
->   `paramize` does not accept bare positional strings as implicit data.
-> * control namespace: a single reserved top-level key, `$`, carries tool-control metadata (e.g. `replace`,
->   `pretty`) as its own JSON object, kept separate from payload data.
-> * control namespace defaults: if no source sets `$`, the merged output has no `$` key or an empty `{}`,
->   depending on the consuming tool's own default handling — `paramize` itself does not invent control values.
-> * control namespace merge: `$` is merged the same way as any other top-level key across sources — shallow,
->   later-source-wins — so a later source can override individual control flags without needing to restate the
->   whole `$` object.
-> * escaping a literal `$` field: payload data that legitimately needs a top-level key literally named `$`
->   must be written as `$$` in JSON input; `paramize` unescapes `$$` back to `$` on output and never treats it
->   as the control namespace.
-> * named CLI flags and control namespace: a bare `--replace=true` on the CLI is sugar for
->   `{"$":{"replace":true}}` and is merged into the `$` object, not into the payload root.
-> * output: `paramize` (the CLI binary) writes exactly one JSON object to stdout and nothing else, so its
->   output is always safe to pipe into another JSON-speaking tool.
-> * output formatting: output is compact (no insignificant whitespace) by default; pretty-printing is opt-in
->   via the control flag `$.pretty` (i.e. `--pretty` on the CLI).
-> * exit codes: `0` on successful merge and emit, non-zero on any parse error, with a human-readable message
->   on stderr — never on stdout.
-> * determinism: given the same stdin, positional arguments, and flags in the same order, `paramize` always
->   produces byte-identical output.
->
-> ## Components
->
-> * `libparamize` (C): a small C99 static/shared library exposing a single entry point that performs the merge
->   and returns a malloc'd, NUL-terminated JSON string owned by the caller.
-> * `paramize` (CLI): a statically linked binary built on `libparamize` that reads argv and stdin and writes
->   the merged JSON object to stdout, usable as a standalone pre-processing pipe stage in front of any other
->   tool.
-> * `paramize.js` (JS): a dependency-free reference port implementing the same specification for use in
->   Node.js tools, kept in sync with the C implementation via this document rather than via shared binary
->   bindings.
->
-> ## Non-goals (for now)
->
-> * array-valued or repeated-list flags (e.g. `--tag=a --tag=b` collecting into an array) are not supported in
->   v1; a repeated flag simply overwrites.
-> * deep/recursive merging of nested objects across sources is intentionally out of scope, to keep merge
->   semantics predictable and easy to reason about.
- -->
+-->
 
 ## Tools
 
@@ -442,6 +339,16 @@ will output this JSON text:
 
 Surprisingly (for me), although the shell variable `words` was defined with a space and is used without
 quotes (as in, `words:"$words"`), it still arrives in one chunk.
+
+### Beautify
+
+**To Be Written**
+
+To reformat JSON output as a human-friendly representation, pipe into `jsonick/beautify`:
+
+```bash
+node jsonick/analyze-cli-arguments-phase-1 +verbose -verbose -- wat | jsonick/beautify
+```
 
 ## Notes
 
@@ -504,28 +411,8 @@ kind of sitting on the fence.
 
 ## See Also
 
-* [SQLite *JSON Functions And Operators*](https://sqlite.org/json1.html)
-
-## Open Questions
-
-* [—] Classical options are marked by `-x` or `-xxx`; JSONick Boolean options are marked by `+` and `-`;
-  only facet options are not marked by a prefix, only by a colon that appears after the option name.
-  Shouldn't facets also have a prefix such as, maybe
-  * `@name:value`,
-  * `^name:value`,
-  * `&name:value`,
-  * `*name:value`,
-  * `:name:value`,
-  * `?name:value`,
-  * `$name:value`,
-  * `%name:value`, or, indeed
-  * `+name:value` or
-  * `-name:value`, neither of which would collide with the use of `+name`, `-name` for Booleans.
-  * A suitable prefix could make many strings such as URLs (as in `https://sqlite.org`) less likely to be
-    mistaken for facets.
-  * using `$` collides with its usage as shell variable markers.
-  * When any prefix gets adopted, must clarify what happens in the case of `cmd %name: xxx`: is the value of
-    field `name` empty or is it `xxx` (which in this case appears as not the same but the next argument).
+* [SQLite *JSON Functions And Operators*](https://sqlite.org/json1.html); this may become interesting in the
+  future for the formulation of selectors into complex JSON objects.
 
 ## To Do
 
@@ -535,4 +422,27 @@ kind of sitting on the fence.
   if they encounter it
   * [+] How is `cmd-1 | cmd-2` to be treated when compared to `cmd-2 < file`? Is it possible /meaningful to write
     `cmd-1 | cmd-2 < file`?
+
+## Is Done
+
+* [+] <strike>Classical options are marked by `-x` or `-xxx`; JSONick Boolean options are marked by `+` and
+  `-`; only facet options are not marked by a prefix, only by a colon that appears after the option name.
+  Shouldn't facets also have a prefix such as, maybe</strike>
+  * <strike>`@name:value`,</strike>
+  * <strike>`^name:value`,</strike>
+  * <strike>`&name:value`,</strike>
+  * <strike>`*name:value`,</strike>
+  * <strike>`:name:value`,</strike>
+  * <strike>`?name:value`,</strike>
+  * <strike>`$name:value`,</strike>
+  * <strike>`%name:value`, or, indeed</strike>
+  * <strike>`+name:value` or</strike>
+  * <strike>`-name:value`, neither of which would collide with the use of `+name`, `-name` for
+    Booleans.</strike>
+  * <strike>A suitable prefix could make many strings such as URLs (as in `https://sqlite.org`) less likely
+    to be mistaken for facets.</strike>
+  * <strike>using `$` collides with its usage as shell variable markers.</strike>
+  * <strike>When any prefix gets adopted, must clarify what happens in the case of `cmd %name: xxx`: is the
+    value of field `name` empty or is it `xxx` (which in this case appears as not the same but the next
+    argument).</strike>
 
