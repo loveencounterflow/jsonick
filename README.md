@@ -15,6 +15,7 @@ humans (readable) and nice for machines (parsable)*
     - [Conventions for Command Line Arguments](#conventions-for-command-line-arguments)
       - [Overarching Rules](#overarching-rules)
       - [Detailed Rules for each Argument Type](#detailed-rules-for-each-argument-type)
+    - [Argument Descriptions: TNVX Objects](#argument-descriptions-tnvx-objects)
     - [Phase 1](#phase-1)
       - [Example 1.1](#example-11)
     - [Phase 2](#phase-2)
@@ -119,7 +120,14 @@ JSONick follows some very simple rules to parse command line arguments:
   of the argument is not correctly formed (thereby failing to 'live up to' the expectations for that prefix
   as laid out below), the argument is classified as an error. Consumers may decide how to deal with errors.
 * In the below, the term 'name' specifically means "a legal JavaScript identifier albeit one where hyphens
-  are acceptable in non-initial positions".
+  are acceptable in non-initial positions". All name-bearing argument types are by default options, not
+  operands, and therefore their parsing results go into slot `c`. To re-route name-bearing arguments like
+  Booleans and facets to slot `d`, use a qualified name by prefixing `d.` (letter `d` U+0064, full stop `.`
+  U+002e). For example, `cmd '{"verbose":false}' +d.verbose` will produce two entries in `d`, the first
+  specifying `false` for a property in the payload object called `verbose`, and the second one specifying
+  `true`. Depending on further processing, this may be resolved by having the latter overwrite the former.
+  Likewise, `cmd :d.color=red` is (almost) the same as `cmd '{"color":"red"}'`. The prefixed `d.` is always
+  stripped so that only the unprefixed name remains.
 * Arguments that start with an optional plus or minus sign `/[+\-]?/`, followed by an optional dot `/[.]?/`,
   followed by a digit `/[0-9]/` are considered numeric strings and, hence, operands. This rule turns
   notations like `+.45cm`, `800.3` and `-3` into legal operands.
@@ -132,40 +140,45 @@ JSONick follows some very simple rules to parse command line arguments:
 
 In Phase 1, each command line argument gets assigned one of the following types (`t`) and slots (`s`):
 
-* 'post-fence', `{ t: 'pfn', slot: 'd', }`, for all arguments following a `--` (fence) argument;
-* 'bare', `{ t: 'bar', slot: 'd', }`;
-* 'escaped', `{ t: 'esc', slot: 'd', }`;
-* 'numeric', `{ t: 'num', slot: 'd', }`;
-* 'boolean', `{ t: 'bol', slot: 'c', }` (can go to slot `d` if explicitly marked);
-* 'facet', `{ t: 'fac', slot: 'c', }` (can go to slot `d` if explicitly marked);
-* (JSON) 'list' (literal), `{ t: 'lst', slot: 'd', }`;
-* (JSON) 'object' (literal), `{ t: 'obj', slot: 'd', }`.
+* 'post-fence', `{ t: 'pfn', }`, slot `d`, for all arguments following a `--` (fence) argument;
+* 'bare', `{ t: 'bar', }`, slot `d`;
+* 'escaped', `{ t: 'esc', }`, slot `d`;
+* 'numeric', `{ t: 'num', }`, slot `d`;
+* 'boolean', `{ t: 'bol', }`, slot `c` (can also go to slot `d` if explicitly marked);
+* 'facet', `{ t: 'fac', }`, slot `c` (can also go to slot `d` if explicitly marked);
+* (JSON) 'list' (literal), `{ t: 'lst', }`, slot `d`;
+* (JSON) 'object' (literal), `{ t: 'obj', }`, slot `d`.
 
 Here is how arguments are processed:
 
-* An argument that consists of two hyphen-minus (`--`, U+0026 U+0026) is a fence.
+* An argument that consists of two hyphen-minuses (`--`, U+002d U+002d) is a fence. The fence causes
+  suspension of parsing and all arguments following `--` will be turned into entries in slot `d` with type
+  `pfn` whose value is the unchanged test of the argument. It is not possible to resume parsing once a fence
+  has been encountered. The first `--` encountered will not cause an entry anywhere except for its listing
+  in `cde.a`; however, each argument following it (naturally including arguments that consist of two
+  hyphen-minuses) will be reflected as an entry in `d`.
 
 * An argument that starts with an optional single hyphen-minus (`-`, U+002d) or plus sign (`+`, U+002b),
   followed by an optional full stop (`.`, U+002e), followed by one or more digits (`/[0-9]/`, U+0030..U+0039)
   is considered numeric (`num`) and is classified as an operand.
 
 * An argument that starts with a single hyphen-minus (`-`, U+002d) is considered a candidate for a Boolean
-  flag with the value of `false`. It must directly be followed by a name, e.g. `cmd -colorize` sets
-  `{"c":{"colorize": false}}`.
+  flag with the value of `false`. It must directly be followed by an optionally qualified name, e.g. `cmd
+  -colorize` sets `{"c":{"colorize": false}}`.
 
 * An argument that starts with a single hyphen-minus but is not followed by a name is an error and goes to
   slot `e`.
 
 * An argument that starts with a plus sign (`+`, U+002b) is considered a candidate for a Boolean flag with
-  the value of `true`. It must directly be followed by a name, e.g. `cmd +colorize` sets `{"c":{"colorize":
-  true}}`.
+  the value of `true`. It must directly be followed by an optionally qualified name, e.g. `cmd +colorize`
+  sets `{"c":{"colorize": true}}`.
 
 * An argument that starts with a plus sign but is not followed by a name is an error and goes to slot `e`.
 
 * An argument that starts with a colon (`:`, U+003a) is considered a candidate for a 'facet', i.e. a name /
-  value pair. It must be followed by 1) an option name, then 2) an equals sign (`=`, U+003d), then 3) a
-  (possibly empty) value. For example, `cmd :verbosity=eloquent` sets the option `{ verbosity: 'eloquent'
-  }`.
+  value pair. It must be followed by 1) an optionally qualified name, then 2) an equals sign (`=`, U+003d),
+  then 3) a (possibly empty) value. For example, `cmd :verbosity=eloquent` sets the option `{ verbosity:
+  'eloquent' }`.
 
 * An argument that starts with a colon but doesn't comply with the rule above this one is an error and goes
   to slot `e`.
@@ -173,7 +186,8 @@ Here is how arguments are processed:
 * An argument that starts with a percent sign (`%`, U+0025) is considered an escaped operand. The percent
   sign blocks leading punction such as `+`, `-`, `:`, `{` and `[` from triggering recognition as a
   special-syntax element. For example, to add the text `+good` as an operand to `cmd` one can write `cmd
-  %+good`. To start an operand with a percent sign, use two percent signs.
+  %+good`. To start an operand with a value whose first character is a percent sign, use two percent signs
+  as in `cmd '%% is a percent sign'`.
 
 * An argument that starts with a left curly brace (`{`, U+007b) is considered a candidate for a JSON object
   literal. It is put into the `d` slot but not parsed which is left to Phase 2.
@@ -181,64 +195,83 @@ Here is how arguments are processed:
 * An argument that starts with a left square bracket (`[`, U+005b) is considered a candidate for a JSON list
   literal. It is put into the `d` slot but not parsed which is left to Phase 2.
 
+### Argument Descriptions: TNVX Objects
+
+The so-called *tnvx* objects used to describe each argument in the `c`, `d` and `e` slots of the *cde*
+object have at least 2 and up to 4 properties:
+
+* `t` (mandatory): The (suspected or factual) type of the argument; one of `'pfn'`, `'bar'`, `'esc'`,
+  `'num'`, `'bol'`, `'fac'`, `'lst'`, `'obj'`.
+
+* `n` (optional): In the case of types `bol` (Boolean option) and `fac` (facet option), the name of the
+  option.
+
+* `v` (optional): Missing only if the argument was put into slot `e`; retrieve original form from `cde.a` for
+  error messages. Otherwise (if the entry representing the argument was put into `c` or `d`):
+  * In the case of type `bol` (Boolean option), `v` is either `true` or `false`.
+  * In the case of `fac` (facet option), `v` represents the part of the argument that came after the equals
+    sign (which may be an empty string).
+  * In the case of `esc`, `v` is the part of the argument after the initial percent sign `%`.
+  * In the case of `bar`, `pfn`, `num`, `obj` and `lst`, `v` is the entire argument.
+
+  For example, `+colorize` gives `{ t: 'bol', n: 'colorize', v: true, }`, `:colorize=always` gives `{ t:
+  'fac', n: 'colorize', v: 'always', }`, `:secret=` gives `{ t: 'fac', n: 'secret', v: '', }`.
+
+* `x` (mandatory): the index of the argument in the list of arguments, `cde.a`.
+
+
 ### Phase 1
 
 Phase 1 consists of looking at each command line argument and building an object of a predetermined shape in
-a predetermined way. Phase 1 is not configurable and should never terminate with a non-null status code;
-instead, the consumer of `analyze-cli-arguments-phase-1` and its equivalents is expected to use
+a predetermined way. Phase 1 is not configurable and should never terminate with a non-null status code
+except for bugs.
+
+Consumers of script `analyze-cli-arguments-phase-1` and its equivalents are expected to use
 `analyze-cli-arguments-phase-2` to reorganize the output of phase 1 and potentially react with error
 messages as seen fit, for which see below.
 
 The object (dictionary) that is the result of processing in phase 1 is called (from the names of its most
-important members, and also intelligible as 'command definition') the ***cdef*** object. The attributes of
-the *cdef* object are in turn called called **slots**; they all have single-character names:
+prominent members) the ***cde*** object. The attributes of the *cde* object are in turn called called
+**slots**; they all have single-character names:
 
-* slot `a`: **A**ll, a list of all command line arguments in their original order. This does not include the
-  name of the executable. In NodeJS programs, `a` is the result of `process.argv.splice(2)`.
+* slot `a`: **A**ll, a list of all command line arguments in their original form and original order. This
+  does not include the name of the executable. In NodeJS programs, `a` is the result of
+  `process.argv.splice(2)`.
 
-* slot `c`: **C**ontrol, a list of objects (dictionaries) containing named values intended for controlling
-  the receiving command line tool.
+* slot `c`: **C**ontrol, a list of *tnvx* objects (see above) containing representations of Booleans and
+  facets intended for controlling the receiving command line tool.
 
-* slot `d`: **D**ata, the 'business data' a.k.a. the 'payload': a list of values (objects, Booleans, numbers
-  and strings) intended as data inputs to the receiving command line tool.
+* slot `d`: **D**ata, the 'business data' a.k.a. the 'payload': a list of *tnvx* objects (see above)
+  containing representations of the arguments intended as data inputs to the receiving command line tool.
 
-* slot `e`: **E**rratic, a list of everything on the command line that could not be parsed.
+* slot `e`: **E**rratic, a list of objects describing every argument that could not be parsed. These entries
+  only contain a property `t` with the 3-letter name of the type that corresponds to their first character
+  and a property `x` which is an index into the list of arguments, `cde.a`.
 
 * slot `i` and slot `o`: **I**nput and **O**utput. These two slots are each set to one of `'tty'`, `'pipe'`,
   `'file'`, `'socket'`, `'other'`, depending on the status of `process.stdin` and `process.stdout`,
   respectively.
 
-* slot `t`: **T**ypes; this is an object with properties `c`, `d`, `e`; each of these is a list of token
-  types that were recognized during arguments parsing. Each element corresponds to an element in the *cdef*
-  object, so if there is an element at index 2 as in `{ "c": [ ..., ..., { "foo": true, } ] }`, retrieving
-  `cdef.t.c[ 2 ]` will tell you that originated as a `'Boolean'`. Likewise, and perhaps more interestingly,
-  a command line like `cmd '{oops'` will result in `cdef.e[0]` being set to `'{oops'` and `cdef.t.e[0]` to
-  `eobjectlit`, indicating an 'erroneous object literal' was detected.
-
 
 
 #### Example 1.1
 
-The command line `node jsonick/lib/main.js +verbose -verbose -- wat` will produce this JSON representation
-of the *cdef* object:
+The command line `node jsonick/lib/main.js +verbose -verbose -- wat | ./beautify` will produce this
+(reformatted) JSON representation of the *cde* object:
 
-```json
+```
 {
-"a":["+verbose","-verbose","--","wat"],
-"c":[{"verbose":true},{"verbose":false}],
-"d":["wat"],
-"e":[],
-"f":null
+  a: [ '+verbose', '-verbose', '--', 'wat' ],
+  c: [
+    { t: 'bol', n: 'verbose', v: true, x: 0 },
+    { t: 'bol', n: 'verbose', v: false, x: 1 }
+  ],
+  d: [ { t: 'pfn', v: 'wat', x: 3 } ],
+  e: [],
+  i: 'tty',
+  o: 'pipe'
 }
 ```
-
-We can see that every element of slot `a` has been cared for: the (probably contradictory, but we'll come to
-that later) options `+verbose` and `-verbose` appear as `{"c":[{"verbose":true},{"verbose":false}]}` in the
-order given; the double hyphen `--` indicates then end of options (hence it's called End of Options Marker,
-**EOM**) and causes argument `wat` to be correctly identified as payload. Without the EOM, `wat` would be
-classified as error and the *cdef* would contain `{"d":[],"e":["wat"]}` instead; this is because `wat` does
-not look like a Boolean or Facet Option, does not look like a JSON literal, and is not explicitly marked as
-being payload, either.
 
 
 ### Phase 2
@@ -439,7 +472,7 @@ then become `markdown-to-webpage --input=pamphlet.css --output=index.html --outp
 
 Now observe that both `pamphlet.md` and `pamphlet.css` are strictly speaking operands (while the two output
 settings could justifiably be called options because they determine how the tool operates in that they make
-it not print to STDOUT but write to files). Given that the *cdef* object has both a `c` (control, options)
+it not print to STDOUT but write to files). Given that the *cde* object has both a `c` (control, options)
 slot and a `d` (data, payload) slot—which one is it for `pamphlet.css`? Shouldn't one write
 `d.input:pamphlet.css` according to JSONick?
 
