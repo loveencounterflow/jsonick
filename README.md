@@ -1,5 +1,5 @@
 
-# JSONick
+# Sigil
 
 *(A Superset of) JSON for Command Line Parameters as well as Data Inputs and Outputs that is both nice for
 humans (readable) and nice for machines (parsable)*
@@ -8,9 +8,9 @@ humans (readable) and nice for machines (parsable)*
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [JSONick](#jsonick)
+- [Sigil](#sigil)
   - [Motivation](#motivation)
-  - [JSONick](#jsonick-1)
+  - [Sigil](#sigil-1)
     - [Naming the Parts](#naming-the-parts)
     - [Conventions for Command Line Arguments](#conventions-for-command-line-arguments)
       - [Overarching Rules](#overarching-rules)
@@ -31,7 +31,7 @@ humans (readable) and nice for machines (parsable)*
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
-# JSONick
+# Sigil
 
 ## Motivation
 
@@ -76,14 +76,14 @@ humans (readable) and nice for machines (parsable)*
 > quoted user-defined name that contains a space, a comma or a fancy accented letter can lead to edge cases
 > that must be considered for each output anew?
 
-## JSONick
+## Sigil
 
-* JSONick is a standard and a software to facilitate inter-process communication and command line option
+* Sigil is a standard and a software to facilitate inter-process communication and command line option
   handling by relying on JSON for inputs and outputs.
 
 ### Naming the Parts
 
-The **command name** will frequently be a short-ish US-ASCII string; JSONick has nothing to say about this
+The **command name** will frequently be a short-ish US-ASCII string; Sigil has nothing to say about this
 except perhaps that in this context, as well as with parameter names, hyphens are commonly preferred over
 underscores (or camelCase).
 
@@ -97,14 +97,14 @@ object, 'the rope' and 'the paper'); the adjuncts deliver additional details abo
 command ('carefully', 'with a knife' and so on). On the command line, another distinction between options
 and payload is that payload can (most often) be piped into the command, wheres options can't.
 
-To capture all the fine details and remain configurable, JSONick processes the command line in phases.
+To capture all the fine details and remain configurable, Sigil processes the command line in phases.
 
 
 ### Conventions for Command Line Arguments
 
 #### Overarching Rules
 
-JSONick follows some very simple rules to parse command line arguments:
+Sigil follows some very simple rules to parse command line arguments:
 
 * Each argument is, in Phase 1, classified either as an option (control) or as an operand (data).
 * An empty argument such as in `cmd ''` is always an operand.
@@ -258,7 +258,7 @@ prominent members) the ***cde*** object. The attributes of the *cde* object are 
 
 #### Example 1.1
 
-The command line `node jsonick/analyze-cli-arguments-phase-1 +verbose -verbose -- wat | ./beautify` will
+The command line `node sigil/analyze-cli-arguments-phase-1 +verbose -verbose -- wat | ./beautify` will
 produce this (reformatted) JSON representation of the *cde* object:
 
 ```
@@ -285,7 +285,7 @@ produce this (reformatted) JSON representation of the *cde* object:
 
 Loose ends
 
-* JSONick-compliant command line tools whose inputs are text oriented:
+* Sigil-compliant command line tools whose inputs are text oriented:
 
   * must accept JSON-formatted data over STDIN as input (the minimum and default behavior)
     * typically, the input will be a standard JSON-formatted object literal
@@ -294,7 +294,7 @@ Loose ends
   * may additionally accept data in other formats, typically announced by a command line switch or a file
     name
 
-* JSONick-compliant command line tools whose outputs are text oriented:
+* Sigil-compliant command line tools whose outputs are text oriented:
 
   * must output JSON-formatted data to STDOUT. It remains unspecified (for the time being at least) whether
     the output should use compressed (optimized for size) or formatted JSON (optimized for readability);
@@ -317,7 +317,7 @@ Loose ends
     }
     ```
 
-    and both outputs are still JSONick-compliant.
+    and both outputs are still Sigil-compliant.
 
 -->
 
@@ -346,10 +346,10 @@ quotes (as in, `words:"$words"`), it still arrives in one chunk.
 
 **To Be Written**
 
-To reformat JSON output as a human-friendly representation, pipe into `jsonick/beautify`:
+To reformat JSON output as a human-friendly representation, pipe into `sigil/beautify`:
 
 ```bash
-node jsonick/analyze-cli-arguments-phase-1 +verbose -verbose -- wat | jsonick/beautify
+node sigil/analyze-cli-arguments-phase-1 +verbose -verbose -- wat | sigil/beautify
 ```
 
 ## Notes
@@ -383,7 +383,7 @@ Now observe that both `pamphlet.md` and `pamphlet.css` are strictly speaking ope
 settings could justifiably be called options because they determine how the tool operates in that they make
 it not print to STDOUT but write to files). Given that the *cde* object has both a `c` (control, options)
 slot and a `d` (data, payload) slot—which one is it for `pamphlet.css`? Shouldn't one write
-`d.input:pamphlet.css` according to JSONick?
+`d.input:pamphlet.css` according to Sigil?
 
 Well, no. `input:pamphlet.css` is OK. One might say it is metadata about an operand of our imaginary
 `markdown-to-webpage` tool, and of course if `input:pamphlet.css` is metadata, then so is `pamphlet.html`:
@@ -427,7 +427,7 @@ kind of sitting on the fence.
 
 ## Is Done
 
-* [+] <strike>Classical options are marked by `-x` or `-xxx`; JSONick Boolean options are marked by `+` and
+* [+] <strike>Classical options are marked by `-x` or `-xxx`; Sigil Boolean options are marked by `+` and
   `-`; only facet options are not marked by a prefix, only by a colon that appears after the option name.
   Shouldn't facets also have a prefix such as, maybe</strike>
   * <strike>`@name:value`,</strike>
