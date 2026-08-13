@@ -32,8 +32,10 @@ patterns = do =>
   https://github.com/mathiasbynens/mothereff.in/blob/master/js-variables/eff.js and
   https://mathiasbynens.be/notes/javascript-identifiers-es6 ###
   nme_re = ///
+    (?! .* - $ ) # disallow strings ending in hyphen-minus
     (?: [ $_ ]                        | \p{ID_Start}    )
-    (?: [ $ _ \- \u{200c} \u{200d} ]  | \p{ID_Continue} )* ///v
+    (?: [ $ _ \- \u{200c} \u{200d} ]  | \p{ID_Continue} )*
+    ///v
   R =
     nme_re: nme_re
     num_re: ///^ (?<v> [+\-]? [.]? [0-9].* ) $///v
