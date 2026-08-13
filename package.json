@@ -1,6 +1,6 @@
 {
   "name": "cde-tnvx",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "(Relaxed) JSON for command line parameters as well as data inputs and outputs",
   "main": "lib/main.js",
   "scripts": {
