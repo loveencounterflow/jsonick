@@ -21,6 +21,7 @@ GUY                       = require 'guy'
 { get_type_of_stdin
   get_type_of_stdout    } = require '../../bricabrac-sfmodules/lib/cli-get-type-of-stdin-stdout'
 { type_of,              } = ( require '../../bricabrac-sfmodules/lib/unstable-rpr-type_of-brics' ).require_type_of()
+{ nfa,                  } = require 'normalize-function-arguments'
 isa_text                  = ( x ) -> ( typeof x ) is 'string'
 
 
@@ -43,7 +44,41 @@ patterns = do =>
     fac_re: ///^ :     ( (?<slot> d ) \. )? (?<n> #{nme_re.source}) = (?<v> .* ) $///v
   return R
 
-#-----------------------------------------------------------------------------------------------------------
+#===========================================================================================================
+class Tnvx
+
+  #---------------------------------------------------------------------------------------------------------
+  _constructor_nfa: nfa ( t, n, v, x, cfg ) -> cfg
+
+  #---------------------------------------------------------------------------------------------------------
+  constructor: ( P... ) ->
+    cfg = @_constructor_nfa P...
+    @t  = cfg.t
+    @n  = cfg.n if cfg.n?
+    @v  = cfg.v if cfg.v?
+    @x  = cfg.x
+    ;undefined
+
+
+#===========================================================================================================
+class Cde
+
+  #---------------------------------------------------------------------------------------------------------
+  _constructor_nfa: nfa ( a, c, d, e, i, o, cfg ) -> cfg
+
+  #---------------------------------------------------------------------------------------------------------
+  constructor: ( P... ) ->
+    cfg = @_constructor_nfa P...
+    @a  = cfg.a ? []
+    @c  = cfg.c ? []
+    @d  = cfg.d ? []
+    @e  = cfg.e ? []
+    @i  = cfg.i ? get_type_of_stdin()
+    @o  = cfg.o ? get_type_of_stdout()
+    ;undefined
+
+
+#===========================================================================================================
 parse_argv = parse_argv_1 = ( argv = null ) ->
   if argv?
     unless ( type_of_argv = type_of argv ) is 'list'
@@ -52,7 +87,7 @@ parse_argv = parse_argv_1 = ( argv = null ) ->
   else
     argv = process.argv[ 2 .. ]
   #.........................................................................................................
-  R     = { a: argv, c: [], d: [], e: [], i: get_type_of_stdin(), o: get_type_of_stdout(), }
+  R = new Cde argv
   return R if argv.length is 0
   #.........................................................................................................
   past_fence    = false
@@ -114,11 +149,7 @@ parse_argv = parse_argv_1 = ( argv = null ) ->
       when '[' then t = 'lst'
       else          t = 'bar'
     #.......................................................................................................
-    entry     = { t, }
-    entry.n   = n if n?
-    entry.v   = v ? s unless slot is 'e'
-    entry.x   = x
-    R[ slot ].push entry
+    R[ slot ].push new Tnvx t, n, ( v ? s ), x
   #.........................................................................................................
   return R
 
@@ -131,7 +162,9 @@ cli = ->
 
 
 #===========================================================================================================
-module.exports = { parse_argv, parse_argv_1, }
+module.exports = do =>
+  internals = { patterns, }
+  return { parse_argv, parse_argv_1, internals, }
 
 #===========================================================================================================
 if module is require.main then do =>
