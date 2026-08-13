@@ -210,8 +210,18 @@ importers:
       guy:
         specifier: ^14.2.0
         version: 14.2.0
+      normalize-function-arguments:
+        specifier: ^0.2.1
+        version: 0.2.1
 
 packages:
+
+  bricabrac-sfmodules@0.18.0:
+    resolution: {integrity: sha512-rajGfQDa9hlEubD5ctV1D88UJN5d/xb4Cd2xDzYsqlzWeGVqV3mkQyAcA5S+mh7eK+jqt/i5+4xmwjjD32jq5A==}
+
+  env-paths@3.0.0:
+    resolution: {integrity: sha512-dtJUTepzMW3Lm/NPxRf3wP4642UWhjL2sQxc+ym2YMj1m/H2zDNQOlezafzkHwn6sMstjHTwG6iQQsctDW/b1A==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   guy@14.2.0:
     resolution: {integrity: sha512-3b3TgmxfspcLULdJ4oOw8uD6hNnVJ4aFJnzoWSHigil+y1UGb3/otrrZcPDQaiL5LRzaJsRi/6AorNOf/F4VtA==}
@@ -219,10 +229,26 @@ packages:
   intertype-legacy@7.7.1:
     resolution: {integrity: sha512-Bj3k9bCu8vA6JLIvnCrJXOdkecgY5wtCmORclJ87uq22N53swREHT5bezSeK5TwcxgSJEDg2wEfcn4kNr9Qv8A==}
 
+  loupe@3.2.1:
+    resolution: {integrity: sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ==}
+
   multimix@5.0.0:
     resolution: {integrity: sha512-N9cdGSDDD7kxOV7R6e4iZqsHTZ4F4iiSDWqMcVqx4gEH6HBtRXav39Gj3fgT1YqvBcwPCQuf0Oa5R2cDaLWK8A==}
 
+  normalize-function-arguments@0.1.0:
+    resolution: {integrity: sha512-ske8wWMhYLNV9rhnJKENJ4NEKzmIMzrX39UZpt5aVRsEBlK0ea3o046NtdC8yPbODaU6I3sQggTIPVw6zlBNhA==}
+
+  normalize-function-arguments@0.2.1:
+    resolution: {integrity: sha512-fWMZKdLG9bA6RJB2o8QEDFB9p8GbycGBRzhgh5VwhiflCO/5RevbkILVpuRFdof9Rt0z9D+dvR6KsO+ezQVyOA==}
+
 snapshots:
+
+  bricabrac-sfmodules@0.18.0:
+    dependencies:
+      env-paths: 3.0.0
+      normalize-function-arguments: 0.1.0
+
+  env-paths@3.0.0: {}
 
   guy@14.2.0:
     dependencies:
@@ -232,4 +258,15 @@ snapshots:
     dependencies:
       multimix: 5.0.0
 
+  loupe@3.2.1: {}
+
   multimix@5.0.0: {}
+
+  normalize-function-arguments@0.1.0:
+    dependencies:
+      loupe: 3.2.1
+
+  normalize-function-arguments@0.2.1:
+    dependencies:
+      bricabrac-sfmodules: 0.18.0
+      loupe: 3.2.1
