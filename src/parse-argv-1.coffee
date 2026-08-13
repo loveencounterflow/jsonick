@@ -55,7 +55,8 @@ parse_argv = parse_argv_1 = ( argv = null ) ->
   R     = { a: argv, c: [], d: [], e: [], i: get_type_of_stdin(), o: get_type_of_stdout(), }
   return R if argv.length is 0
   #.........................................................................................................
-  past_fence  = false
+  past_fence    = false
+  past_scissors = false
   for s, x in argv
     throw new Error "Ωjsonick___2 at argv[ #{x} ]: expected a string, got a #{type_of s}" unless isa_text s
     #.....................................................................................................
@@ -80,6 +81,10 @@ parse_argv = parse_argv_1 = ( argv = null ) ->
         #...................................................................................................
         if s is '--'
           past_fence = true
+          continue
+        #...................................................................................................
+        if s is '--x--'
+          past_scissors = true
           continue
         #...................................................................................................
         t = 'bol'
