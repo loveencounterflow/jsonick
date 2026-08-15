@@ -27,6 +27,7 @@ humans (readable) and nice for machines (parsable)*
   - [See Also](#see-also)
   - [To Do](#to-do)
   - [Is Done](#is-done)
+  - [Arguments Description Language (ADL)](#arguments-description-language-adl)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -247,8 +248,8 @@ prominent members) the ***cde*** object. The attributes of the *cde* object are 
   containing representations of the arguments intended as data inputs to the receiving command line tool.
 
 * slot `e`: **E**rratic, a list of objects describing every argument that could not be parsed. These entries
-  only contain a property `t` with the 3-letter name of the type that corresponds to their first character
-  and a property `x` which is an index into the list of arguments, `cde.a`.
+  contain a property `t` with the 3-letter name of the type that corresponds to their first character, `v`
+  with the argument string, and `x` (index into the list of arguments).
 
 * slot `i` and slot `o`: **I**nput and **O**utput. These two slots are each set to one of `'tty'`, `'pipe'`,
   `'file'`, `'socket'`, `'other'`, depending on the status of `process.stdin` and `process.stdout`,
@@ -447,4 +448,97 @@ kind of sitting on the fence.
   * <strike>When any prefix gets adopted, must clarify what happens in the case of `cmd %name: xxx`: is the
     value of field `name` empty or is it `xxx` (which in this case appears as not the same but the next
     argument).</strike>
+
+## Arguments Description Language (ADL)
+
+
+Each parameter is declared by five data points: whether it's a positional (i.e. unnamed) parameter, what
+its name and type is, how often it can be repeated and what its default value is:
+
+`p`: **positional**: if `true`, must not be named on the command line; if `false`, must be named.
+`n`: **name(s)**: one or more names (e.g. `verbose,v` to make `v` a short form of `verbose`)
+`t`: **type**: name of type that will be used to convert from string to usable value
+`z`: **cardinality**: how often
+`f`: **default** (a.k.a. 'first' choice)
+
+All of these factors can be succinctly expressed with a string: we start with cardinality which can be
+expressed either as an unsigned integer or a two integers (min and max) within a pair of brackets, separated
+by two dots. A missing mininmum is interpreted as zero, a missing maximum as infinity:
+
+* `[4]` and `[4..4]` mean 'exactly four'
+* `[..4]` means 'at most four'
+* `[4..]` means 'at least four'
+* `[1..4]` means 'at least one, at most four'
+* `[1..]` means 'at least one'
+
+The most frequently used cardinals can be represented with wild card-like symbols:
+
+* `?` is equivalent to `[0..1]`, 'at most once', so an optional argument
+* `*` is equivalent to `[0..]`, 'any number', so an optional repeatable argument
+* `+` is equivalent to `[1..]`, 'at least one', so a mandatory repeatable argument
+
+Next comes the name which we enclose in parentheses when we're dealing with positional arguments. The parens
+can be read as 'internally known by this name, but not externally used'. It is traditionally seen as
+desirable to shorten command line argument names; we take care of this by allowing any number of aliases
+separated by colons. Observe that it makes no sense to alias a positional argument, so it's either parens or
+commas for the name field, never both.
+
+The next element is preceded by a colon and names the type of the argument; this will also be used to convert
+the command line string value to the desired data type.
+
+Optional arguments need a default value which is entered after a leading equals sign.
+
+Putting it all together, some possible argument declarations are:
+
+* `'?verbose,v:boolean=false'`: optional argument `verbose`, a.k.a. `v`, defaults to `false`
+* `'?verbose,v:boolean'`: the same as above, Booleans defaulting to `false` being understood
+* `'?verbose,v:=false'`: the same as above, datatype `boolean` inferred from `false`
+* `'+input,i'`: one or more of `:input=...` or `:i=...` must be given. There's no default, datatype `text`
+  is default unless indicated otherwise
+* `output,o`: exactly one `:output=...` or `:o=...` must be given; datatype is again `text` as per default
+* `*(input-paths)`: any number of input paths may appear as unnamed arguments
+* `[2..](n):integer`: at least two integers (to be collected in a list named `n`) must be given. (Note:
+  there's a possible extension here in that we could allow `[2..](n):integer=[0,0]` to mean: 'at least two
+  integers are needed, the first two missing ones are to be replaced by zeros. But observe the `[2..]` is
+  now redundant and not different in effect from `[0..]` or `[1..]`, though it is different from `[3..]`)
+
+Default values must be written as JSON literals, so string literals must use double quotes.
+
+Several parameter declarations may be chained by separating them with semicolons (`;` U+003b).
+
+
+```json
+{ "n": "verbose,v" }  // 1
+{ "n": "*verbose,v" } // 0 or more
+{ "n": "?verbose,v" } // 0 or 1
+{ "n": "+verbose,v" } // 1 or more
+
+{ "t": "float" } // cast as float
+{ "t": "boolean" } // cast as Boolean
+
+{ "f": false } // de**F**ault or **F**irst value
+
+
+[
+{ "n": "?verbose,v", "t": "boolean", "f": false }
+{ "n": "*(input-paths)", "t": "text" } // positional parameter has name in parens
+]
+
+
+"?verbose,v:boolean=false;*(input-paths)"
+
+"input:text"          // needs exactly 1 named parameters `:input=...`
+"[1]input:text"       // needs exactly 1 named parameters `:input=...`
+
+"?input:text"         // needs at most 1 named parameters `:input=...`
+"[..1]input:text"     // needs at most 1 named parameters `:input=...`
+"[0..1]input:text"    // needs at most 1 named parameters `:input=...`
+
+"[1..3]input:text"    // needs at least 1, at most 3 named parameters `:input=...`
+
+// use "max": -1 to represent `Infinity`
+
+{ "names": [ "verbose", "v" ], "min": 0, "max": 1, "template": false, }
+
+```
 
